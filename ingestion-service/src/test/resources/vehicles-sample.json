@@ -1,0 +1,58 @@
+{
+  "data": [
+    {
+      "type": "vehicle",
+      "id": "y1871",
+      "attributes": {
+        "label": "1871",
+        "latitude": 42.3497,
+        "longitude": -71.0773,
+        "direction_id": 1,
+        "current_status": "IN_TRANSIT_TO",
+        "current_stop_sequence": 14,
+        "updated_at": "2026-10-06T08:15:30-04:00"
+      },
+      "relationships": {
+        "route": { "data": { "type": "route", "id": "39" } },
+        "trip": { "data": { "type": "trip", "id": "70123456" } },
+        "stop": { "data": { "type": "stop", "id": "1355" } }
+      }
+    },
+    {
+      "type": "vehicle",
+      "id": "y0612",
+      "attributes": {
+        "label": "0612",
+        "latitude": null,
+        "longitude": null,
+        "direction_id": 0,
+        "current_status": "STOPPED_AT",
+        "current_stop_sequence": null,
+        "updated_at": "2026-10-06T08:15:10-04:00"
+      },
+      "relationships": {
+        "route": { "data": { "type": "route", "id": "1" } },
+        "trip": { "data": null },
+        "stop": { "data": null }
+      }
+    },
+    {
+      "type": "vehicle",
+      "id": "y2004",
+      "attributes": {
+        "label": "2004",
+        "latitude": 42.33,
+        "longitude": -71.10,
+        "direction_id": 0,
+        "current_status": "STOPPED_AT",
+        "current_stop_sequence": 3,
+        "updated_at": "2026-10-06T08:15:12-04:00"
+      },
+      "relationships": {
+        "route": { "data": null },
+        "trip": { "data": null },
+        "stop": { "data": null }
+      }
+    }
+  ]
+}

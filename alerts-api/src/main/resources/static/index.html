@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Bus Bunching Monitor</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+  <style>
+    :root { --bg: #f6f7f9; --panel: #fff; --text: #1d2330; --muted: #677085; --bus: #1f6feb; --alert: #d1242f; }
+    * { box-sizing: border-box; }
+    body { margin: 0; font-family: system-ui, sans-serif; background: var(--bg); color: var(--text); display: grid;
+           grid-template-columns: 1fr 340px; height: 100vh; }
+    #map { height: 100vh; }
+    aside { background: var(--panel); padding: 16px; overflow-y: auto; border-left: 1px solid #e3e6eb; }
+    h1 { font-size: 18px; margin: 0 0 4px; }
+    h2 { font-size: 13px; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); margin: 20px 0 8px; }
+    .muted { color: var(--muted); font-size: 13px; }
+    table { width: 100%; border-collapse: collapse; font-size: 14px; }
+    td { padding: 4px 0; border-bottom: 1px solid #eef0f3; }
+    td:last-child { text-align: right; font-variant-numeric: tabular-nums; }
+    .alert { font-size: 13px; padding: 8px 0; border-bottom: 1px solid #eef0f3; }
+    .alert b { color: var(--alert); }
+    @media (max-width: 800px) { body { grid-template-columns: 1fr; height: auto; } #map { height: 60vh; } }
+  </style>
+</head>
+<body>
+<div id="map"></div>
+<aside>
+  <h1>Bus Bunching Monitor</h1>
+  <div class="muted" id="status">Loading...</div>
+  <h2>Bunching by route</h2>
+  <table id="summary"></table>
+  <h2>Recent alerts</h2>
+  <div id="alerts"></div>
+</aside>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+  const map = L.map('map').setView([42.355, -71.08], 12);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    maxZoom: 18, attribution: '&copy; OpenStreetMap contributors'
+  }).addTo(map);
+  const busLayer = L.layerGroup().addTo(map);
+  const alertLayer = L.layerGroup().addTo(map);
+
+  const timeOf = iso => new Date(iso).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+
+  async function refresh() {
+    try {
+      const [vehicles, alerts, summary] = await Promise.all([
+        fetch('/api/vehicles').then(r => r.json()),
+        fetch('/api/alerts?limit=30').then(r => r.json()),
+        fetch('/api/alerts/summary').then(r => r.json())
+      ]);
+
+      busLayer.clearLayers();
+      vehicles.forEach(v => L.circleMarker([v.latitude, v.longitude], {
+        radius: 5, color: '#1f6feb', fillOpacity: .8, weight: 1
+      }).bindTooltip(`Route ${v.routeId} - bus ${v.label}`).addTo(busLayer));
+
+      alertLayer.clearLayers();
+      alerts.slice(0, 15).forEach(a => L.circle([a.latitude, a.longitude], {
+        radius: 150, color: '#d1242f', fillOpacity: .15
+      }).bindTooltip(`Route ${a.routeId}: ${a.leadVehicle} + ${a.trailingVehicle}`).addTo(alertLayer));
+
+      document.getElementById('summary').innerHTML = Object.entries(summary)
+        .map(([route, n]) => `<tr><td>Route ${route}</td><td>${n}</td></tr>`).join('')
+        || '<tr><td class="muted">No bunching yet</td></tr>';
+
+      document.getElementById('alerts').innerHTML = alerts.map(a => `
+        <div class="alert"><b>Route ${a.routeId}</b> buses ${a.leadVehicle} and ${a.trailingVehicle},
+        ${Math.round(a.distanceMeters)} m apart <span class="muted">at ${timeOf(a.detectedAt)}</span></div>`).join('')
+        || '<div class="muted">Waiting for alerts...</div>';
+
+      document.getElementById('status').textContent =
+        `${vehicles.length} buses tracked, updated ${new Date().toLocaleTimeString()}`;
+    } catch (e) {
+      document.getElementById('status').textContent = 'Could not reach the API';
+    }
+  }
+
+  refresh();
+  setInterval(refresh, 10000);
+</script>
+</body>
+</html>

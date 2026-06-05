@@ -1,0 +1,22 @@
+spring:
+  application:
+    name: ingestion-service
+  main:
+    web-application-type: none
+  kafka:
+    bootstrap-servers: localhost:9094
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+      # Wait for all in-sync replicas and let the broker drop duplicate retries.
+      acks: all
+      compression-type: lz4
+      properties:
+        enable.idempotence: true
+        linger.ms: 20
+
+mbta:
+  base-url: https://api-v3.mbta.com
+  api-key: ${MBTA_API_KEY:}
+  routes: ${MBTA_ROUTES:1,15,22,23,28,39,57,66,111,116}
+  poll-interval-ms: 10000

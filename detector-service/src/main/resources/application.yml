@@ -1,0 +1,34 @@
+spring:
+  application:
+    name: detector-service
+  kafka:
+    bootstrap-servers: localhost:9094
+    consumer:
+      group-id: bunching-detector
+      auto-offset-reset: earliest
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      # ErrorHandlingDeserializer catches bad JSON so it goes to the DLT instead of crashing the consumer.
+      value-deserializer: org.springframework.kafka.support.serializer.ErrorHandlingDeserializer
+      properties:
+        spring.deserializer.value.delegate.class: org.springframework.kafka.support.serializer.JsonDeserializer
+        spring.json.trusted.packages: com.parul.bunching.common.events
+        spring.json.value.default.type: com.parul.bunching.common.events.VehiclePosition
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+      acks: all
+      properties:
+        enable.idempotence: true
+    listener:
+      # One consumer thread per partition of mbta.vehicle-positions.
+      concurrency: 3
+
+detector:
+  # Two buses closer than this, same route and direction, count as bunched.
+  threshold-meters: 300
+  # Ignore buses we have not heard from in this long (measured in event time).
+  stale-after-seconds: 120
+  # Do not alert again for the same pair of buses within this window.
+  cooldown-minutes: 10
+  # true = rewind to the oldest retained position and re-run detection.
+  replay-from-beginning: ${DETECTOR_REPLAY_FROM_BEGINNING:false}
