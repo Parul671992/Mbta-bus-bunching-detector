@@ -1,5 +1,7 @@
 # MBTA Bus Bunching Detector
 
+**[Read the case study](https://parul671992.github.io/bus-bunching-detector/)**
+
 Real-time detection of bus bunching on live MBTA data, built with Apache Kafka and Spring Boot.
 
 ## The problem
